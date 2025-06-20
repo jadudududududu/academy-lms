@@ -2,8 +2,9 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-export function middleware(req: NextRequest) {
-  const url = req.nextUrl
+export function middleware(request: NextRequest) {
+  const url = request.nextUrl
+  const pathname = url.pathname
 
   const publicPaths = [
     "/modules/staff-management/instructor",
@@ -11,11 +12,17 @@ export function middleware(req: NextRequest) {
     "/modules"
   ]
 
-  const isPublic = publicPaths.some(path => url.pathname.startsWith(path))
+  const isPublic = publicPaths.some(path => pathname.startsWith(path))
 
   if (isPublic) {
     return NextResponse.next()
   }
 
-  return NextResponse.redirect(new URL("/login", req.url))
+  const isLoggedIn = request.cookies.get("token")?.value
+
+  if (!isLoggedIn) {
+    return NextResponse.redirect(new URL("/login", request.url))
+  }
+
+  return NextResponse.next()
 }
